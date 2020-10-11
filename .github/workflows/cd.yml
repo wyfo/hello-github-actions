@@ -32,15 +32,18 @@ jobs:
         result-encoding: string
         script: |
           const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/')
-          const commits = '${{ steps.pull_request_commits.outputs.result }}'.split('\n')
-          commits.pop() // remove last empty string
-          const addAuthor = async commit => {
+
+          const exec = require('@actions/exec')
+          const commits = []
+          await exec.exec('git', ['log', '--reverse', '--pretty=format:%s', '--grep',  '#', '$(git describe HEAD^ --tags --match "v[0-9]*" --abbrev=0)'], {listeners: {stdout: data => {commits.push(data);console.log(data)}}})
+          console.log(commits)
+          const formatWithAuthor = async commit => {
             const pull_number = commit.match(/#\d*/)[0].substring(1)
             const pr = await github.pulls.get({owner, repo, pull_number})
             const skip_changelog = pr.labels.some(label => label.name == 'skip_changelog')
             return skip_changelog ? null : `- ${commit} by @${pr.user.login}\n`
           }
-          const changes = await Promise.all(commits.map(addAuthor))
+          const changes = await Promise.all(commits.map(formatWithAuthor))
           const changesBody = changes.filter(ch => ch !== null).join('')
           const body = (context.payload.release.body || '') + `\n## Changes\n\n${changesBody}`
           const release_id = context.payload.release.id
