@@ -32,6 +32,7 @@ jobs:
         result-encoding: string
         script: |
           const commits = '${{ steps.pull_request_commits.outputs.result }}'.split('\n')
+          commits.pop() // remove last empty string
           const addAuthor = async commit => {
             const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/')
             const pull_number = commit.match(/#\d*/)[0].substring(1)
