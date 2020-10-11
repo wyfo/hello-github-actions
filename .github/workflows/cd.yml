@@ -31,10 +31,10 @@ jobs:
       with:
         result-encoding: string
         script: |
+          const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/')
           const commits = '${{ steps.pull_request_commits.outputs.result }}'.split('\n')
           commits.pop() // remove last empty string
           const addAuthor = async commit => {
-            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/')
             const pull_number = commit.match(/#\d*/)[0].substring(1)
             const pr = await github.pulls.get({owner, repo, pull_number})
             const skip_changelog = pr.labels.some(label => label.name == 'skip_changelog')
