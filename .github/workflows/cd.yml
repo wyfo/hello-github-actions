@@ -25,6 +25,7 @@ jobs:
       run: echo "::set-output name=result::$(git describe HEAD~1 --tags --match "v[0-9]*" --abbrev=0)"
     - id: pull_request_commits
       run: echo "::set-output name=result::$(git log --pretty=format:%s --grep '#' ${{ steps.prev_version.outputs.result }}..)"
+    - run: echo "${{ steps.pull_request_commits.outputs.result }}"
     - name: Update release body with pull requests changes
       uses: actions/github-script@v3
       with:
