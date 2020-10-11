@@ -36,6 +36,7 @@ jobs:
           const prev_release = await stdout('git describe HEAD^ --tags --match "v[0-9]*" --abbrev=0')
           console.log('prev_release', prev_release)
           const commits = await stdout(`git log --reverse --pretty=format:%s --grep '#' ${prev_release}..`)
+          console.log('commit command', `git log --reverse --pretty=format:%s --grep '#' ${prev_release}..`)
           console.log('commits', commits)
           console.log('splitted commits', commits.split('\n'))
           if (!commits) return
@@ -44,11 +45,10 @@ jobs:
             console.log('commit', commit)
             const pull_number = commit.match(/#\d*/)[0].substring(1)
             console.log('pull_number', pull_number)
-            const pr = await github.pulls.get({owner, repo, pull_number})
+            const pr = (await github.pulls.get({owner, repo, pull_number})).data
             console.log('pr', pr)
             console.log('labels', pr.labels)
             const skip_changelog = pr.labels.some(label => label.name == 'skip_changelog')
-            
             return skip_changelog ? null : `- ${commit} by @${pr.user.login}\n`
           }
           const changes = await Promise.all(commits.split('\n').map(formatWithAuthor))
