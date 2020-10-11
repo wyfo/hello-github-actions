@@ -16,7 +16,7 @@ jobs:
         result-encoding: string
         script: return context.ref.replace('/refs/tags/v', '')
     - id: prev_version
-      run: echo "::set-output name=result::$(git describe HEAD^ --tags --match "v[0-9]*" --abbrev=0)"
+      run: echo "::set-output name=result::$(git describe $GITHUB_REF^ --tags --match "v[0-9]*" --abbrev=0)"
     - id: pull_request_commits
       run: echo "::set-output name=result::$(git log --pretty=format:%s --grep '#' ${{ steps.prev_version.outputs.result }}..)"
     - name: Update release body with pull requests changes
