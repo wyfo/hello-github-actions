@@ -42,6 +42,6 @@ jobs:
           }
           const changes = await Promise.all(commits.map(addAuthor))
           const changesBody = changes.filter(ch => ch !== null).join('')
-          const body = (context.payload.release.body || '') + `\n##Changes\n\n${changesBody}`
+          const body = (context.payload.release.body || '') + `\n## Changes\n\n${changesBody}`
           const release_id = context.payload.release.id
           await github.repos.updateRelease({owner, repo, release_id, body})
