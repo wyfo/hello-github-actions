@@ -1,0 +1,39 @@
+name: CD
+
+on:
+  release:
+    types: [ published ]
+
+jobs:
+  build_and_publish:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - id: version
+      uses: actions/github-script@v3
+      with:
+        result-encoding: string
+        script: return context.ref.replace('/refs/tags/v', '')
+    - id: prev_version
+      run: echo "::set-output name=result::$(git describe HEAD^ --tags --match "v[0-9]*" --abbrev=0)"
+    - id: pull_request_commits
+      run: echo "::set-output name=result::$(git log --pretty=format:%s --grep '#' ${{ steps.prev_version.outputs.result }}..)"
+    - name: Update release body with pull requests changes
+      uses: actions/github-script@v3
+      with:
+        result-encoding: string
+        script: |
+          const commits = '${{ steps.pull_request_commits.outputs.result }}'.split('\n')
+          const addAuthor = async commit => {
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/')
+            const pull_number = commit.match(/#\d*/)[0].substring(1)
+            const pr = await github.pulls.get({owner, repo, pull_number})
+            const skip_changelog = pr.labels.some(label => label.name == 'skip_changelog')
+            return skip_changelog ? null : `- ${commit} by @${pr.user.login}\n`
+          }
+          const changes = await Promise.all(commits.map(addAuthor))
+          const changesBody = changes.filter(ch => ch !== null).join('')
+          const body = context.payload.release.body + `\n##Changes\n\n${changesBody}`
+          const release_id = context.payload.release.id
+          await github.repos.updateRelease({owner, repo, release_id, body})
