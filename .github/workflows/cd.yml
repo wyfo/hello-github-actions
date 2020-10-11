@@ -15,6 +15,7 @@ jobs:
       with:
         result-encoding: string
         script: return context.ref.replace('/refs/tags/v', '')
+    - run: git --version
     - id: prev_version
       run: echo "::set-output name=result::$(git describe $GITHUB_SHA^ --tags --match "v[0-9]*" --abbrev=0)"
     - id: pull_request_commits
