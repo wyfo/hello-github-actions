@@ -34,7 +34,7 @@ jobs:
           const {exec} = require('child_process')
           const stdout = command => new Promise((resolve, reject) => exec(command, (error, stdout, stderr) => resolve(stdout)))
           const prev_release = await stdout('git describe HEAD^ --tags --match "v[0-9]*" --abbrev=0')
-          console.log('prev_release', prev-release)
+          console.log('prev_release', prev_release)
           const commits = await stdout(`git log --reverse --pretty=format:%s --grep '#' ${prev_release}..`)
           console.log('commits', commits)
           console.log('splitted commits', commits.split('\n'))
